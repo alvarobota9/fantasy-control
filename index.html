@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Control Fantasy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pitch:#1B4A3A;
+  --pitch-dark:#123329;
+  --paper:#F7F4EC;
+  --card:#FFFFFF;
+  --ink:#232620;
+  --ink-soft:#5C5D57;
+  --line:#DEDACD;
+  --gold:#C9A227;
+  --gold-dark:#8A6E16;
+  --red:#B23A2E;
+  --red-bg:#F7E7E4;
+  --green-bg:#E7EFE2;
+  --green-txt:#2F5233;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.num{font-family:'Oswald',sans-serif;}
+.app{max-width:900px;margin:0 auto;padding-bottom:60px;}
+.header{
+  background:var(--pitch);
+  color:#fff;
+  padding:28px 24px 22px;
+  position:relative;
+  overflow:hidden;
+}
+.header::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background-image:repeating-linear-gradient(90deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 40px);
+  pointer-events:none;
+}
+.header h1{
+  font-size:26px;
+  font-weight:700;
+  letter-spacing:0.5px;
+  margin:0 0 4px;
+  text-transform:uppercase;
+}
+.header p{margin:0;color:#CFE0D6;font-size:13.5px;}
+.potinfo{
+  display:flex;
+  gap:22px;
+  margin-top:16px;
+  flex-wrap:wrap;
+}
+.potinfo div{font-size:12px;color:#B9D0C1;text-transform:uppercase;letter-spacing:0.5px;}
+.potinfo .val{font-family:'Oswald',sans-serif;font-size:19px;color:#fff;display:block;margin-top:2px;}
+.tabs{
+  display:flex;
+  background:var(--pitch-dark);
+  padding:0 24px;
+  gap:4px;
+  overflow-x:auto;
+}
+.tab{
+  padding:12px 14px;
+  color:#AEC4B6;
+  font-size:13.5px;
+  font-weight:500;
+  cursor:pointer;
+  border-bottom:3px solid transparent;
+  white-space:nowrap;
+  user-select:none;
+}
+.tab.active{color:#fff;border-bottom-color:var(--gold);}
+.content{padding:22px 24px;}
+.section-title{
+  font-size:15px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  color:var(--ink-soft);
+  margin:0 0 12px;
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px 18px;
+  margin-bottom:14px;
+}
+.player-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:11px 0;
+  border-bottom:1px solid var(--line);
+}
+.player-row:last-child{border-bottom:none;}
+.player-name-wrap{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+.badge-num{
+  width:26px;height:26px;border-radius:50%;
+  background:var(--pitch);color:#fff;
+  font-family:'Oswald',sans-serif;font-size:12px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.name-input{
+  border:none;background:transparent;font-size:14.5px;font-weight:500;
+  color:var(--ink);width:100%;padding:4px 0;font-family:inherit;
+}
+.name-input:focus{outline:none;border-bottom:1px solid var(--gold);}
+.pay-toggle{
+  border:1px solid var(--line);
+  background:var(--red-bg);
+  color:var(--red);
+  font-size:12.5px;
+  font-weight:600;
+  padding:6px 14px;
+  border-radius:20px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.pay-toggle.paid{
+  background:var(--green-bg);
+  color:var(--green-txt);
+  border-color:#C6DBC0;
+}
+.summary-strip{
+  display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px;
+}
+.stat{
+  flex:1;min-width:120px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:12px 14px;
+}
+.stat .label{font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.4px;}
+.stat .value{font-family:'Oswald',sans-serif;font-size:22px;margin-top:3px;}
+.jornada-grid{display:grid;grid-template-columns:1fr;gap:8px;}
+.jornada-card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:10px 12px;
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+.jornada-card .jnum{
+  font-family:'Oswald',sans-serif;
+  font-size:14px;
+  color:var(--gold-dark);
+  padding-top:8px;
+  flex-shrink:0;
+  width:28px;
+}
+.jornada-puestos{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;}
+.jornada-puesto-row{
+  display:grid;
+  grid-template-columns:26px 1fr 90px;
+  align-items:center;
+  gap:8px;
+}
+.puesto-tag{
+  font-family:'Oswald',sans-serif;
+  font-size:11.5px;
+  font-weight:600;
+  text-align:center;
+  border-radius:5px;
+  padding:4px 0;
+}
+.puesto-tag.gold{background:#FBF1D6;color:var(--gold-dark);}
+.puesto-tag.silver{background:#EDECE7;color:#5C5D57;}
+select{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:7px 8px;
+  font-family:'Inter',sans-serif;
+  font-size:13.5px;
+  color:var(--ink);
+  background:#fff;
+}
+.mini-toggle{
+  border:1px solid var(--line);
+  background:var(--red-bg);
+  color:var(--red);
+  font-size:11.5px;
+  font-weight:600;
+  padding:6px 8px;
+  border-radius:6px;
+  cursor:pointer;
+  text-align:center;
+}
+.mini-toggle.paid{background:var(--green-bg);color:var(--green-txt);border-color:#C6DBC0;}
+.final-card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px 18px;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.trophy{
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Oswald',sans-serif;font-weight:700;font-size:14px;
+  flex-shrink:0;
+}
+.trophy.gold{background:var(--gold);color:#4A3B0D;}
+.trophy.silver{background:#D6D3C8;color:#4A4A44;}
+.final-row-main{flex:1;display:flex;flex-direction:column;gap:6px;}
+.final-row-main .lbl{font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.4px;}
+.ticket{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:14px 16px;
+  margin-bottom:10px;
+  position:relative;
+}
+.ticket-top{display:flex;justify-content:space-between;align-items:baseline;}
+.ticket-top .pname{font-size:15px;font-weight:600;}
+.ticket-top .balance{font-family:'Oswald',sans-serif;font-size:19px;}
+.balance.pos{color:var(--green-txt);}
+.balance.neg{color:var(--red);}
+.ticket-detail{
+  display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;
+  font-size:12px;color:var(--ink-soft);
+}
+.ticket-detail b{color:var(--ink);font-weight:600;}
+.pot-bar{
+  height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:10px;
+}
+.pot-bar-fill{height:100%;background:var(--gold);}
+.footnote{font-size:12px;color:var(--ink-soft);margin-top:6px;}
+.save-status{
+  position:fixed;
+  bottom:16px;
+  right:16px;
+  padding:8px 14px;
+  border-radius:20px;
+  font-size:12.5px;
+  font-weight:600;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+  display:none;
+  align-items:center;
+  gap:8px;
+  z-index:100;
+}
+.save-status.show{display:flex;}
+.save-status.saving{background:#EFE9D8;color:var(--gold-dark);}
+.save-status.error{background:var(--red-bg);color:var(--red);}
+.save-status.ok{background:var(--green-bg);color:var(--green-txt);}
+.save-status button{
+  border:none;background:transparent;color:inherit;font-weight:700;
+  cursor:pointer;text-decoration:underline;padding:0;font-size:inherit;
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Control Fantasy</h1>
+    <p>Inscripciones, premios de jornada y balance final</p>
+    <div class="potinfo" id="potinfo"></div>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div class="content" id="content"></div>
+</div>
+<div class="save-status" id="saveStatus"></div>
+
+<script>
+const STORAGE_KEY = 'fantasy-state-v1';
+const DEFAULT_NAMES = ['Jugador 1','Jugador 2','Jugador 3','Jugador 4','Jugador 5','Jugador 6','Jugador 7','Jugador 8','Jugador 9','Jugador 10'];
+
+let state = null;
+let activeTab = 'inscripciones';
+
+function defaultState(){
+  return {
+    inscripcion: 50,
+    premioJornadaPrimero: 7,
+    premioJornadaSegundo: 3,
+    premioPrimero: 60,
+    premioSegundo: 30,
+    numJornadas: 38,
+    participantes: DEFAULT_NAMES.map((n,i)=>({id:'p'+i, nombre:n})),
+    pagosInscripcion: {},
+    jornadas: Array.from({length:38}, (_,i)=>({numero:i+1, primeroId:'', segundoId:'', pagadoPrimero:false, pagadoSegundo:false})),
+    final: {primeroId:'', segundoId:'', pagadoPrimero:false, pagadoSegundo:false}
+  };
+}
+
+const CURRENT_PRIZE_CONFIG = { premioJornadaPrimero: 7, premioJornadaSegundo: 3, premioPrimero: 60, premioSegundo: 30 };
+const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbx0-krX0Mr24DWj2FFyB6iYhBb22k-ewAjfeCGskNF_EKlv9vavoHtEMSH4spig4p0pug/exec';
+
+async function backendGet(){
+  const res = await fetch(BACKEND_URL, { method:'GET' });
+  if(!res.ok) throw new Error('GET falló: ' + res.status);
+  return res.json();
+}
+
+async function backendSet(data){
+  const res = await fetch(BACKEND_URL, {
+    method:'POST',
+    headers: { 'Content-Type':'text/plain;charset=utf-8' },
+    body: JSON.stringify(data)
+  });
+  if(!res.ok) throw new Error('POST falló: ' + res.status);
+  return res.json();
+}
+
+async function loadState(){
+  try{
+    const remote = await backendGet();
+    if(remote && remote.participantes){
+      state = remote;
+      let needsSave = false;
+      for(const key in CURRENT_PRIZE_CONFIG){
+        if(state[key] !== CURRENT_PRIZE_CONFIG[key]){
+          state[key] = CURRENT_PRIZE_CONFIG[key];
+          needsSave = true;
+        }
+      }
+      if(state.participantes.length < 10){
+        const nextNum = state.participantes.length + 1;
+        state.participantes.push({id:'p'+(state.participantes.length), nombre:'Jugador '+nextNum});
+        needsSave = true;
+      }
+      if(state.jornadas.length && state.jornadas[0].primeroId === undefined){
+        state.jornadas = state.jornadas.map(j=>({
+          numero: j.numero,
+          primeroId: j.ganadorId || '',
+          segundoId: '',
+          pagadoPrimero: !!j.pagado,
+          pagadoSegundo: false
+        }));
+        needsSave = true;
+      }
+      if(needsSave) await saveState(state);
+      return;
+    }
+  }catch(e){
+    console.error('No se pudo cargar del backend', e);
+  }
+  state = defaultState();
+  await saveState(state);
+}
+
+let pendingSave = null;
+
+function setStatus(kind, msg, autoHide){
+  const el = document.getElementById('saveStatus');
+  el.className = 'save-status show ' + kind;
+  if(kind === 'error'){
+    el.innerHTML = msg + ' <button id="retrySaveBtn">Reintentar</button>';
+    document.getElementById('retrySaveBtn').onclick = ()=>{ if(pendingSave) saveState(pendingSave); };
+  } else {
+    el.textContent = msg;
+  }
+  if(autoHide){
+    clearTimeout(setStatus._t);
+    setStatus._t = setTimeout(()=>{ el.classList.remove('show'); }, 1800);
+  }
+}
+
+async function saveState(snapshot){
+  const dataToSave = snapshot || JSON.parse(JSON.stringify(state));
+  pendingSave = dataToSave;
+  setStatus('saving', 'Guardando…', false);
+  const maxAttempts = 3;
+  for(let attempt = 1; attempt <= maxAttempts; attempt++){
+    try{
+      const result = await backendSet(dataToSave);
+      if(!result) throw new Error('Respuesta vacía del backend');
+      pendingSave = null;
+      setStatus('ok', 'Guardado ✓', true);
+      return true;
+    }catch(e){
+      console.error('Intento ' + attempt + ' fallido al guardar', e);
+      if(attempt < maxAttempts){
+        await new Promise(r=>setTimeout(r, attempt * 700));
+      }
+    }
+  }
+  setStatus('error', 'No se ha podido guardar', false);
+  return false;
+}
+
+function euros(n){
+  return n.toLocaleString('es-ES', {minimumFractionDigits:0, maximumFractionDigits:0}) + ' €';
+}
+
+function render(){
+  renderPotInfo();
+  renderTabs();
+  renderContent();
+}
+
+function renderPotInfo(){
+  const totalEsperado = state.participantes.length * state.inscripcion;
+  const totalRecaudado = state.participantes.filter(p=>state.pagosInscripcion[p.id]).length * state.inscripcion;
+  const el = document.getElementById('potinfo');
+  el.innerHTML = `
+    <div>Bote inscripciones<span class="val">${euros(totalRecaudado)} / ${euros(totalEsperado)}</span></div>
+    <div>Premio jornada (1º / 2º)<span class="val">${euros(state.premioJornadaPrimero)} / ${euros(state.premioJornadaSegundo)}</span></div>
+    <div>Premio liga (1º / 2º)<span class="val">${euros(state.premioPrimero)} / ${euros(state.premioSegundo)}</span></div>
+  `;
+}
+
+function renderTabs(){
+  const tabs = [
+    {id:'inscripciones', label:'Inscripciones'},
+    {id:'jornadas', label:'Jornadas'},
+    {id:'final', label:'Clasificación final'},
+    {id:'resumen', label:'Resumen'}
+  ];
+  document.getElementById('tabs').innerHTML = tabs.map(t=>
+    `<div class="tab ${activeTab===t.id?'active':''}" data-tab="${t.id}">${t.label}</div>`
+  ).join('');
+  document.querySelectorAll('.tab').forEach(el=>{
+    el.onclick = ()=>{ activeTab = el.dataset.tab; render(); };
+  });
+}
+
+function renderContent(){
+  const c = document.getElementById('content');
+  if(activeTab==='inscripciones') c.innerHTML = viewInscripciones();
+  else if(activeTab==='jornadas') c.innerHTML = viewJornadas();
+  else if(activeTab==='final') c.innerHTML = viewFinal();
+  else c.innerHTML = viewResumen();
+  attachHandlers();
+}
+
+function viewInscripciones(){
+  const rows = state.participantes.map((p,i)=>{
+    const pagado = !!state.pagosInscripcion[p.id];
+    return `
+    <div class="player-row">
+      <div class="player-name-wrap">
+        <div class="badge-num">${i+1}</div>
+        <input class="name-input" data-pid="${p.id}" data-action="rename" value="${p.nombre}">
+      </div>
+      <button class="pay-toggle ${pagado?'paid':''}" data-pid="${p.id}" data-action="toggle-inscripcion">
+        ${pagado? 'Pagado ✓' : 'Pendiente'}
+      </button>
+    </div>`;
+  }).join('');
+  return `
+    <div class="section-title">Inscripción — ${euros(state.inscripcion)} por persona</div>
+    <div class="card">${rows}</div>
+  `;
+}
+
+function viewJornadas(){
+  const opts = ['<option value="">— sin decidir —</option>'].concat(
+    state.participantes.map(p=>`<option value="${p.id}">${p.nombre}</option>`)
+  ).join('');
+  const rows = state.jornadas.map(j=>{
+    return `
+    <div class="jornada-card">
+      <div class="jnum">J${j.numero}</div>
+      <div class="jornada-puestos">
+        <div class="jornada-puesto-row">
+          <span class="puesto-tag gold">1º</span>
+          <select data-jornada="${j.numero}" data-action="set-primero">
+            ${opts.replace(`value="${j.primeroId}"`, `value="${j.primeroId}" selected`)}
+          </select>
+          <div class="mini-toggle ${j.pagadoPrimero?'paid':''}" data-jornada="${j.numero}" data-action="toggle-jornada-primero">
+            ${j.pagadoPrimero?'Pagado':'Pendiente'}
+          </div>
+        </div>
+        <div class="jornada-puesto-row">
+          <span class="puesto-tag silver">2º</span>
+          <select data-jornada="${j.numero}" data-action="set-segundo">
+            ${opts.replace(`value="${j.segundoId}"`, `value="${j.segundoId}" selected`)}
+          </select>
+          <div class="mini-toggle ${j.pagadoSegundo?'paid':''}" data-jornada="${j.numero}" data-action="toggle-jornada-segundo">
+            ${j.pagadoSegundo?'Pagado':'Pendiente'}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  return `
+    <div class="section-title">1º y 2º de cada jornada — ${euros(state.premioJornadaPrimero)} / ${euros(state.premioJornadaSegundo)}</div>
+    <div class="jornada-grid">${rows}</div>
+  `;
+}
+
+function viewFinal(){
+  const opts = ['<option value="">— sin decidir —</option>'].concat(
+    state.participantes.map(p=>`<option value="${p.id}">${p.nombre}</option>`)
+  ).join('');
+  const f = state.final;
+  return `
+    <div class="section-title">Clasificación final de liga</div>
+    <div class="final-card">
+      <div class="trophy gold">1º</div>
+      <div class="final-row-main">
+        <span class="lbl">Campeón de liga — ${euros(state.premioPrimero)}</span>
+        <select data-action="set-final-primero">
+          ${opts.replace(`value="${f.primeroId}"`, `value="${f.primeroId}" selected`)}
+        </select>
+      </div>
+      <div class="mini-toggle ${f.pagadoPrimero?'paid':''}" data-action="toggle-final-primero">
+        ${f.pagadoPrimero?'Pagado':'Pendiente'}
+      </div>
+    </div>
+    <div class="final-card">
+      <div class="trophy silver">2º</div>
+      <div class="final-row-main">
+        <span class="lbl">Subcampeón — ${euros(state.premioSegundo)}</span>
+        <select data-action="set-final-segundo">
+          ${opts.replace(`value="${f.segundoId}"`, `value="${f.segundoId}" selected`)}
+        </select>
+      </div>
+      <div class="mini-toggle ${f.pagadoSegundo?'paid':''}" data-action="toggle-final-segundo">
+        ${f.pagadoSegundo?'Pagado':'Pendiente'}
+      </div>
+    </div>
+  `;
+}
+
+function viewResumen(){
+  const stats = computeStats();
+  const totalEsperado = state.participantes.length * state.inscripcion;
+  const totalRecaudado = stats.reduce((s,x)=>s+x.pagadoInscripcion,0);
+  const totalGanadoJornadasPagado = stats.reduce((s,x)=>s+x.ganadoJornadasPagado,0);
+  const pct = totalEsperado ? Math.round((totalRecaudado/totalEsperado)*100) : 0;
+
+  const tickets = stats.map(s=>{
+    const balance = s.balance;
+    const cls = balance >= 0 ? 'pos' : 'neg';
+    return `
+    <div class="ticket">
+      <div class="ticket-top">
+        <span class="pname">${s.nombre}</span>
+        <span class="balance ${cls}">${balance>=0?'+':''}${euros(balance)}</span>
+      </div>
+      <div class="ticket-detail">
+        <span>Inscripción: <b>${s.pagadoInscripcion? 'Pagada':'Pendiente'}</b></span>
+        <span>Jornadas: <b>${s.primeros}× 1º, ${s.segundos}× 2º</b> (${euros(s.ganadoJornadasTotal)})</span>
+        ${s.premioFinal>0 ? `<span>Premio liga: <b>${euros(s.premioFinal)}</b></span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="section-title">Bote recaudado</div>
+    <div class="summary-strip">
+      <div class="stat"><div class="label">Recaudado</div><div class="value">${euros(totalRecaudado)}</div></div>
+      <div class="stat"><div class="label">Esperado</div><div class="value">${euros(totalEsperado)}</div></div>
+      <div class="stat"><div class="label">Pagado en jornadas</div><div class="value">${euros(totalGanadoJornadasPagado)}</div></div>
+    </div>
+    <div class="pot-bar"><div class="pot-bar-fill" style="width:${pct}%"></div></div>
+    <div class="footnote">${pct}% de las inscripciones cobradas</div>
+    <div class="section-title" style="margin-top:22px;">Balance por jugador</div>
+    ${tickets}
+    <div class="footnote">Balance = premios ganados (1º/2º de jornada + liga) − inscripción. El coste del premium (30 €) ya está descontado del bote general y no se asigna a nadie individualmente.</div>
+  `;
+}
+
+function computeStats(){
+  return state.participantes.map(p=>{
+    const pagadoInscripcion = state.pagosInscripcion[p.id] ? state.inscripcion : 0;
+    const primerosArr = state.jornadas.filter(j=>j.primeroId===p.id);
+    const segundosArr = state.jornadas.filter(j=>j.segundoId===p.id);
+    const jornadasGanadas = primerosArr.length + segundosArr.length;
+    const ganadoJornadasTotal = primerosArr.length * state.premioJornadaPrimero + segundosArr.length * state.premioJornadaSegundo;
+    const ganadoJornadasPagado = primerosArr.filter(j=>j.pagadoPrimero).length * state.premioJornadaPrimero
+      + segundosArr.filter(j=>j.pagadoSegundo).length * state.premioJornadaSegundo;
+    let premioFinal = 0;
+    if(state.final.primeroId===p.id) premioFinal += state.premioPrimero;
+    if(state.final.segundoId===p.id) premioFinal += state.premioSegundo;
+    const balance = ganadoJornadasTotal + premioFinal - pagadoInscripcion;
+    return {
+      id:p.id, nombre:p.nombre,
+      pagadoInscripcion, jornadasGanadas,
+      primeros: primerosArr.length, segundos: segundosArr.length,
+      ganadoJornadasTotal, ganadoJornadasPagado,
+      premioFinal, balance
+    };
+  });
+}
+
+function attachHandlers(){
+  document.querySelectorAll('[data-action="rename"]').forEach(el=>{
+    el.onchange = async ()=>{
+      const p = state.participantes.find(x=>x.id===el.dataset.pid);
+      p.nombre = el.value.trim() || p.nombre;
+      await saveState();
+    };
+  });
+  document.querySelectorAll('[data-action="toggle-inscripcion"]').forEach(el=>{
+    el.onclick = async ()=>{
+      const pid = el.dataset.pid;
+      state.pagosInscripcion[pid] = !state.pagosInscripcion[pid];
+      await saveState();
+      render();
+    };
+  });
+  document.querySelectorAll('[data-action="set-primero"]').forEach(el=>{
+    el.onchange = async ()=>{
+      const num = parseInt(el.dataset.jornada,10);
+      const j = state.jornadas.find(x=>x.numero===num);
+      j.primeroId = el.value;
+      if(!el.value) j.pagadoPrimero = false;
+      await saveState();
+      render();
+    };
+  });
+  document.querySelectorAll('[data-action="set-segundo"]').forEach(el=>{
+    el.onchange = async ()=>{
+      const num = parseInt(el.dataset.jornada,10);
+      const j = state.jornadas.find(x=>x.numero===num);
+      j.segundoId = el.value;
+      if(!el.value) j.pagadoSegundo = false;
+      await saveState();
+      render();
+    };
+  });
+  document.querySelectorAll('[data-action="toggle-jornada-primero"]').forEach(el=>{
+    el.onclick = async ()=>{
+      const num = parseInt(el.dataset.jornada,10);
+      const j = state.jornadas.find(x=>x.numero===num);
+      if(!j.primeroId) return;
+      j.pagadoPrimero = !j.pagadoPrimero;
+      await saveState();
+      render();
+    };
+  });
+  document.querySelectorAll('[data-action="toggle-jornada-segundo"]').forEach(el=>{
+    el.onclick = async ()=>{
+      const num = parseInt(el.dataset.jornada,10);
+      const j = state.jornadas.find(x=>x.numero===num);
+      if(!j.segundoId) return;
+      j.pagadoSegundo = !j.pagadoSegundo;
+      await saveState();
+      render();
+    };
+  });
+  const selPrimero = document.querySelector('[data-action="set-final-primero"]');
+  if(selPrimero) selPrimero.onchange = async ()=>{
+    state.final.primeroId = selPrimero.value;
+    if(!selPrimero.value) state.final.pagadoPrimero = false;
+    await saveState(); render();
+  };
+  const selSegundo = document.querySelector('[data-action="set-final-segundo"]');
+  if(selSegundo) selSegundo.onchange = async ()=>{
+    state.final.segundoId = selSegundo.value;
+    if(!selSegundo.value) state.final.pagadoSegundo = false;
+    await saveState(); render();
+  };
+  const togPrimero = document.querySelector('[data-action="toggle-final-primero"]');
+  if(togPrimero) togPrimero.onclick = async ()=>{
+    if(!state.final.primeroId) return;
+    state.final.pagadoPrimero = !state.final.pagadoPrimero;
+    await saveState(); render();
+  };
+  const togSegundo = document.querySelector('[data-action="toggle-final-segundo"]');
+  if(togSegundo) togSegundo.onclick = async ()=>{
+    if(!state.final.segundoId) return;
+    state.final.pagadoSegundo = !state.final.pagadoSegundo;
+    await saveState(); render();
+  };
+}
+
+(async function init(){
+  await loadState();
+  render();
+})();
+</script>
+</body>
+</html>
