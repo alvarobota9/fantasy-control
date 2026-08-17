@@ -266,6 +266,33 @@ select{
   border:none;background:transparent;color:inherit;font-weight:700;
   cursor:pointer;text-decoration:underline;padding:0;font-size:inherit;
 }
+.evo-legend{
+  display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:14px;
+  padding-top:12px;border-top:1px solid var(--line);
+}
+.evo-legend-item{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--ink-soft);
+}
+.evo-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.clasif-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);}
+.clasif-table{border-collapse:collapse;width:100%;min-width:640px;}
+.clasif-table th,.clasif-table td{
+  padding:5px 4px;text-align:center;border-bottom:1px solid var(--line);
+}
+.clasif-table thead th{
+  font-family:'Oswald',sans-serif;font-size:11px;color:var(--ink-soft);
+  text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap;padding:8px 6px;
+  position:sticky;top:0;background:var(--card);
+}
+.clasif-table .jnum-cell{
+  font-family:'Oswald',sans-serif;font-size:11.5px;color:var(--gold-dark);
+  white-space:nowrap;padding-left:8px;text-align:left;
+}
+.pos-input{
+  width:36px;text-align:center;border:1px solid var(--line);border-radius:5px;
+  padding:4px 2px;font-family:'Inter',sans-serif;font-size:12.5px;color:var(--ink);
+}
 </style>
 </head>
 <body>
@@ -298,6 +325,7 @@ function defaultState(){
     participantes: DEFAULT_NAMES.map((n,i)=>({id:'p'+i, nombre:n})),
     pagosInscripcion: {},
     jornadas: Array.from({length:38}, (_,i)=>({numero:i+1, primeroId:'', segundoId:'', pagadoPrimero:false, pagadoSegundo:false})),
+    clasificacion: Array.from({length:38}, (_,i)=>({numero:i+1, posiciones:{}})),
     final: {primeroId:'', segundoId:'', pagadoPrimero:false, pagadoSegundo:false}
   };
 }
@@ -346,6 +374,10 @@ async function loadState(){
           pagadoPrimero: !!j.pagado,
           pagadoSegundo: false
         }));
+        needsSave = true;
+      }
+      if(!state.clasificacion){
+        state.clasificacion = Array.from({length: state.numJornadas || 38}, (_,i)=>({numero:i+1, posiciones:{}}));
         needsSave = true;
       }
       if(needsSave) await saveState(state);
@@ -423,6 +455,7 @@ function renderTabs(){
   const tabs = [
     {id:'inscripciones', label:'Inscripciones'},
     {id:'jornadas', label:'Jornadas'},
+    {id:'evolucion', label:'Evolución'},
     {id:'final', label:'Clasificación final'},
     {id:'resumen', label:'Resumen'}
   ];
@@ -438,6 +471,7 @@ function renderContent(){
   const c = document.getElementById('content');
   if(activeTab==='inscripciones') c.innerHTML = viewInscripciones();
   else if(activeTab==='jornadas') c.innerHTML = viewJornadas();
+  else if(activeTab==='evolucion') c.innerHTML = viewEvolucion();
   else if(activeTab==='final') c.innerHTML = viewFinal();
   else c.innerHTML = viewResumen();
   attachHandlers();
@@ -496,6 +530,75 @@ function viewJornadas(){
   return `
     <div class="section-title">1º y 2º de cada jornada — ${euros(state.premioJornadaPrimero)} / ${euros(state.premioJornadaSegundo)}</div>
     <div class="jornada-grid">${rows}</div>
+  `;
+}
+
+const PALETTE = ['#1B4A3A','#C9A227','#B23A2E','#3B6EA5','#7B4B94','#D97B29','#4E8B67','#A5486B','#4A5FC1','#8A6E16'];
+
+function buildEvoChart(){
+  const w = 860, h = 260, padL = 26, padR = 12, padT = 12, padB = 10;
+  const numJ = state.numJornadas;
+  const rows = 10;
+  const xStep = numJ > 1 ? (w - padL - padR) / (numJ - 1) : 0;
+  const yStep = (h - padT - padB) / (rows - 1);
+  let grid = '';
+  for(let pos=1; pos<=rows; pos++){
+    const y = padT + (pos-1)*yStep;
+    grid += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w-padR}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`;
+    grid += `<text x="2" y="${(y+3).toFixed(1)}" font-size="9" fill="var(--ink-soft)" font-family="Inter, sans-serif">${pos}</text>`;
+  }
+  let lines = '';
+  state.participantes.forEach((p, idx)=>{
+    const pts = [];
+    state.clasificacion.forEach((j, i)=>{
+      const pos = j.posiciones[p.id];
+      if(pos){
+        const x = padL + i * xStep;
+        const y = padT + (pos - 1) * yStep;
+        pts.push(x.toFixed(1) + ',' + y.toFixed(1));
+      }
+    });
+    if(pts.length){
+      const d = pts.map((pt,i)=> (i===0?'M':'L') + pt).join(' ');
+      lines += `<path d="${d}" fill="none" stroke="${PALETTE[idx % PALETTE.length]}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+  });
+  const hasAnyData = state.clasificacion.some(j => Object.keys(j.posiciones).length);
+  if(!hasAnyData){
+    return `<div class="card" style="text-align:center;color:var(--ink-soft);padding:30px 10px;">Todavía no hay clasificaciones metidas. Rellena alguna jornada abajo para ver el gráfico.</div>`;
+  }
+  const legend = state.participantes.map((p, idx)=>
+    `<div class="evo-legend-item"><span class="evo-dot" style="background:${PALETTE[idx % PALETTE.length]}"></span>${p.nombre}</div>`
+  ).join('');
+  return `
+    <div class="card">
+      <svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;display:block;">${grid}${lines}</svg>
+      <div class="evo-legend">${legend}</div>
+    </div>
+  `;
+}
+
+function viewEvolucion(){
+  const chart = buildEvoChart();
+  const tableRows = state.clasificacion.map(j=>{
+    const cells = state.participantes.map(p=>{
+      const val = j.posiciones[p.id] || '';
+      return `<td><input type="number" min="1" max="${state.participantes.length}" class="pos-input" data-jornada="${j.numero}" data-pid="${p.id}" value="${val}"></td>`;
+    }).join('');
+    return `<tr><td class="jnum-cell">J${j.numero}</td>${cells}</tr>`;
+  }).join('');
+  const headerCells = state.participantes.map(p=>`<th>${p.nombre}</th>`).join('');
+  return `
+    <div class="section-title">Evolución en la clasificación</div>
+    ${chart}
+    <div class="section-title" style="margin-top:22px;">Posición de cada jugador por jornada</div>
+    <div class="footnote" style="margin-bottom:10px;">Escribe la posición (1 a ${state.participantes.length}) de cada jugador esa jornada. Se guarda solo al salir del campo.</div>
+    <div class="clasif-table-wrap">
+      <table class="clasif-table">
+        <thead><tr><th></th>${headerCells}</tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>
   `;
 }
 
@@ -649,6 +752,20 @@ function attachHandlers(){
       j.pagadoSegundo = !j.pagadoSegundo;
       await saveState();
       render();
+    };
+  });
+  document.querySelectorAll('.pos-input').forEach(el=>{
+    el.onchange = async ()=>{
+      const num = parseInt(el.dataset.jornada,10);
+      const pid = el.dataset.pid;
+      const j = state.clasificacion.find(x=>x.numero===num);
+      const v = parseInt(el.value,10);
+      if(!v){
+        delete j.posiciones[pid];
+      } else {
+        j.posiciones[pid] = Math.max(1, Math.min(state.participantes.length, v));
+      }
+      await saveState();
     };
   });
   const selPrimero = document.querySelector('[data-action="set-final-primero"]');
