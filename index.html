@@ -590,7 +590,7 @@ function viewEvolucion(){
   const headerCells = state.participantes.map(p=>`<th>${p.nombre}</th>`).join('');
   return `
     <div class="section-title">Evolución en la clasificación</div>
-    ${chart}
+    <div id="evoChartWrap">${chart}</div>
     <div class="section-title" style="margin-top:22px;">Posición de cada jugador por jornada</div>
     <div class="footnote" style="margin-bottom:10px;">Escribe la posición (1 a ${state.participantes.length}) de cada jugador esa jornada. Se guarda solo al salir del campo.</div>
     <div class="clasif-table-wrap">
@@ -766,6 +766,8 @@ function attachHandlers(){
         j.posiciones[pid] = Math.max(1, Math.min(state.participantes.length, v));
       }
       await saveState();
+      const wrap = document.getElementById('evoChartWrap');
+      if(wrap) wrap.innerHTML = buildEvoChart();
     };
   });
   const selPrimero = document.querySelector('[data-action="set-final-primero"]');
